@@ -15,6 +15,11 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 	return i.store[name]
 }
 
+// GetLeague return list of player score from store
+func (i *InMemoryPlayerStore) GetLeague() []Player {
+	return nil
+}
+
 // RecordWin temporally add player score to store
 func (i *InMemoryPlayerStore) RecordWin(name string) {
 	i.store[name]++
