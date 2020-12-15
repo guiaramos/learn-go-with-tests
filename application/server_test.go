@@ -132,7 +132,6 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 		server.ServeHTTP(response, newLeagueRequest())
 
 		assertStatus(t, response.Code, http.StatusOK)
-		fmt.Printf("response: %s", response.Body)
 
 		got := getLeagueFromResponse(t, response.Body)
 		want := []Player{
