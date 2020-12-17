@@ -1,12 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -167,9 +167,29 @@ func TestLeague(t *testing.T) {
 	})
 }
 
+func TestFileSystemStore(t *testing.T) {
+	t.Run("/league from a reader", func(t *testing.T) {
+		database := strings.NewReader(`[
+			{"Name": "Gui", "Wins": 10},
+      {"Name": "Claire", "Wins": 33}
+		]`)
+
+		store := FileSystemPlayerStore{database}
+
+		got := store.GetLeague()
+		want := []Player{
+			{Name: "Gui", Wins: 10},
+			{Name: "Claire", Wins: 33},
+		}
+
+		got = store.GetLeague()
+		assertLeague(t, got, want)
+	})
+}
+
 func getLeagueFromResponse(t *testing.T, body io.Reader) (league []Player) {
 	t.Helper()
-	err := json.NewDecoder(body).Decode(&league)
+	league, err := NewLeague(body)
 
 	if err != nil {
 		t.Fatalf("Unable to parse the response from server %q into slice of Player, '%v'", body, err)

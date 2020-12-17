@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -19,10 +20,15 @@ type PlayerServer struct {
 	http.Handler
 }
 
-// Player is a interface
+// Player is a collection of properties for a player
 type Player struct {
 	Name string
 	Wins int
+}
+
+// FileSystemPlayerStore is a collection of properties and methods for storing a player
+type FileSystemPlayerStore struct {
+	database io.ReadSeeker
 }
 
 // NewPlayerServer creates a new server for player store
@@ -37,6 +43,13 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 	p.Handler = router
 
 	return p
+}
+
+//GetLeague returns the league from the static store
+func (f *FileSystemPlayerStore) GetLeague() []Player {
+	f.database.Seek(0, 0)
+	league, _ := NewLeague(f.database)
+	return league
 }
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
