@@ -45,11 +45,25 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 	return p
 }
 
-//GetLeague returns the league from the static store
+// GetLeague returns the league from the static store
 func (f *FileSystemPlayerStore) GetLeague() []Player {
 	f.database.Seek(0, 0)
 	league, _ := NewLeague(f.database)
 	return league
+}
+
+// GetPlayerScore returns the player's score from the file system store
+func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
+	var wins int
+
+	for _, player := range f.GetLeague() {
+		if player.Name == name {
+			wins = player.Wins
+			break
+		}
+	}
+
+	return wins
 }
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {

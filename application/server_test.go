@@ -185,6 +185,30 @@ func TestFileSystemStore(t *testing.T) {
 		got = store.GetLeague()
 		assertLeague(t, got, want)
 	})
+
+	t.Run("get player score", func(t *testing.T) {
+		database := strings.NewReader(`
+		[
+			{"Name": "Gui", "Wins": 10},
+			{"Name": "Claire", "Wins": 33}
+		]
+		`)
+
+		store := FileSystemPlayerStore{database}
+
+		got := store.GetPlayerScore("Claire")
+		want := 33
+
+		assertScoreEquals(t, got, want)
+	})
+}
+
+func assertScoreEquals(t *testing.T, got, want int) {
+	t.Helper()
+
+	if got != want {
+		t.Errorf("the scores are different, got %v, want %v", got, want)
+	}
 }
 
 func getLeagueFromResponse(t *testing.T, body io.Reader) (league []Player) {
