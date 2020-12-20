@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -17,7 +18,7 @@ const (
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
-	league   []Player
+	league   League
 }
 
 func (s *StubPlayerStore) GetPlayerScore(name string) int {
@@ -29,7 +30,7 @@ func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
-func (s *StubPlayerStore) GetLeague() []Player {
+func (s *StubPlayerStore) GetLeague() League {
 	return s.league
 }
 
@@ -134,7 +135,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 		assertStatus(t, response.Code, http.StatusOK)
 
 		got := getLeagueFromResponse(t, response.Body)
-		want := []Player{
+		want := League{
 			{"Pepper", 3},
 		}
 
@@ -146,7 +147,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 func TestLeague(t *testing.T) {
 
 	t.Run("it returns the league table as JSON", func(t *testing.T) {
-		wantedLeague := []Player{
+		wantedLeague := League{
 			{"Gui", 28},
 			{"Aaron", 30},
 			{"Robin", 50},
@@ -168,16 +169,17 @@ func TestLeague(t *testing.T) {
 }
 
 func TestFileSystemStore(t *testing.T) {
-	t.Run("/league from a reader", func(t *testing.T) {
-		database := strings.NewReader(`[
+	t.Run("get league from a reader", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, `[
 			{"Name": "Gui", "Wins": 10},
       {"Name": "Claire", "Wins": 33}
 		]`)
+		defer cleanDatabase()
 
 		store := FileSystemPlayerStore{database}
 
 		got := store.GetLeague()
-		want := []Player{
+		want := League{
 			{Name: "Gui", Wins: 10},
 			{Name: "Claire", Wins: 33},
 		}
@@ -187,17 +189,36 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("get player score", func(t *testing.T) {
-		database := strings.NewReader(`
+		database, cleanDatabase := createTempFile(t, `
 		[
 			{"Name": "Gui", "Wins": 10},
 			{"Name": "Claire", "Wins": 33}
 		]
 		`)
+		defer cleanDatabase()
 
 		store := FileSystemPlayerStore{database}
 
 		got := store.GetPlayerScore("Claire")
 		want := 33
+
+		assertScoreEquals(t, got, want)
+	})
+
+	t.Run("store wins for existing players", func(t *testing.T) {
+		database, cleanDatabae := createTempFile(t, `
+		[
+			{"Name": "Gui", "Wins": 10},
+			{"Name": "Claire", "Wins": 33}
+		]
+		`)
+		defer cleanDatabae()
+
+		store := FileSystemPlayerStore{database}
+		store.RecordWin("Claire")
+
+		got := store.GetPlayerScore("Claire")
+		want := 34
 
 		assertScoreEquals(t, got, want)
 	})
@@ -211,7 +232,7 @@ func assertScoreEquals(t *testing.T, got, want int) {
 	}
 }
 
-func getLeagueFromResponse(t *testing.T, body io.Reader) (league []Player) {
+func getLeagueFromResponse(t *testing.T, body io.Reader) (league League) {
 	t.Helper()
 	league, err := NewLeague(body)
 
@@ -222,7 +243,7 @@ func getLeagueFromResponse(t *testing.T, body io.Reader) (league []Player) {
 	return
 }
 
-func assertLeague(t *testing.T, got, want []Player) {
+func assertLeague(t *testing.T, got, want League) {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v want %v", got, want)
@@ -263,4 +284,23 @@ func assertContentType(t *testing.T, r *httptest.ResponseRecorder, want string) 
 	if r.Result().Header.Get("content-type") != want {
 		t.Errorf("response did not have content-type of %s, got %v", want, r.Result().Header)
 	}
+}
+
+func createTempFile(t *testing.T, initialData string) (io.ReadWriteSeeker, func()) {
+	t.Helper()
+
+	tmpFile, err := ioutil.TempFile("", "db")
+
+	if err != nil {
+		t.Fatalf("could not create temp fle %v", err)
+	}
+
+	tmpFile.Write([]byte(initialData))
+
+	removeFile := func() {
+		tmpFile.Close()
+		os.Remove(tmpFile.Name())
+	}
+
+	return tmpFile, removeFile
 }
