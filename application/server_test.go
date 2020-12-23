@@ -112,10 +112,12 @@ func TestStoreWins(t *testing.T) {
 }
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	database, cleanDatabase := createTempFile(t, "")
+	database, cleanDatabase := createTempFile(t, `[]`)
 	defer cleanDatabase()
 
-	store := NewFileSystemPlayerStore(database)
+	store, err := NewFileSystemPlayerStore(database)
+	assertError(t, err)
+
 	server := NewPlayerServer(store)
 	player := "Pepper"
 
@@ -179,7 +181,8 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		assertError(t, err)
 
 		got := store.GetLeague()
 		want := League{
@@ -200,7 +203,8 @@ func TestFileSystemStore(t *testing.T) {
 		`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		assertError(t, err)
 
 		got := store.GetPlayerScore("Claire")
 		want := 33
@@ -217,7 +221,9 @@ func TestFileSystemStore(t *testing.T) {
 		`)
 		defer cleanDatabae()
 
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		assertError(t, err)
+
 		store.RecordWin("Claire")
 
 		got := store.GetPlayerScore("Claire")
@@ -233,7 +239,9 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		assertError(t, err)
+
 		store.RecordWin("Theo")
 
 		got := store.GetPlayerScore("Theo")
@@ -304,7 +312,7 @@ func assertContentType(t *testing.T, r *httptest.ResponseRecorder, want string) 
 	}
 }
 
-func createTempFile(t *testing.T, initialData string) (io.ReadWriteSeeker, func()) {
+func createTempFile(t *testing.T, initialData string) (*os.File, func()) {
 	t.Helper()
 
 	tmpFile, err := ioutil.TempFile("", "db")
@@ -321,4 +329,13 @@ func createTempFile(t *testing.T, initialData string) (io.ReadWriteSeeker, func(
 	}
 
 	return tmpFile, removeFile
+}
+
+func assertError(t *testing.T, err error) {
+	t.Helper()
+
+	if err != nil {
+		t.Fatalf("didn't expect an error but got one, %v", err)
+	}
+
 }

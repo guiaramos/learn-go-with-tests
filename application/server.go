@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
+	"os"
 )
 
 // PlayerStore stores scores information about players
@@ -28,7 +28,7 @@ type Player struct {
 
 // FileSystemPlayerStore is a collection of properties and methods for storing a player
 type FileSystemPlayerStore struct {
-	database io.ReadWriteSeeker
+	database *json.Encoder
 	league   League
 }
 
@@ -47,14 +47,14 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 }
 
 // NewFileSystemPlayerStore create a new file system player store
-func NewFileSystemPlayerStore(database io.ReadWriteSeeker) *FileSystemPlayerStore {
+func NewFileSystemPlayerStore(database *os.File) (*FileSystemPlayerStore, error) {
 	database.Seek(0, 0)
-	league, _ := NewLeague(database)
+	league, err := NewLeague(database)
 
 	return &FileSystemPlayerStore{
-		database: database,
+		database: json.NewEncoder(&tape{database}),
 		league:   league,
-	}
+	}, err
 }
 
 // GetLeague returns the league from the static store
@@ -83,8 +83,7 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 		f.league = append(f.league, Player{name, 1})
 	}
 
-	f.database.Seek(0, 0)
-	json.NewEncoder(f.database).Encode(f.league)
+	f.database.Encode(f.league)
 }
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
