@@ -1,4 +1,4 @@
-package main
+package poker
 
 import (
 	"fmt"
@@ -186,8 +186,8 @@ func TestFileSystemStore(t *testing.T) {
 
 		got := store.GetLeague()
 		want := League{
-			{Name: "Gui", Wins: 10},
 			{Name: "Claire", Wins: 33},
+			{Name: "Gui", Wins: 10},
 		}
 
 		got = store.GetLeague()

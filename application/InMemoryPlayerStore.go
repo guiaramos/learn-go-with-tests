@@ -1,4 +1,4 @@
-package main
+package poker
 
 // InMemoryPlayerStore temporally stores information about players
 type InMemoryPlayerStore struct {
