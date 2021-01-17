@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 
 	poker "github.com/guiaramos/learn-go-with-tests/application"
 )
@@ -17,14 +18,16 @@ var dummyStdOut = &bytes.Buffer{}
 type GameSpy struct {
 	StartCalled     bool
 	StartCalledWith int
+	BlindAlert      []byte
 
 	FinishedCalled   bool
 	FinishCalledWith string
 }
 
-func (g *GameSpy) Start(numberOfPlayers int, alertDestination io.Writer) {
+func (g *GameSpy) Start(numberOfPlayers int, out io.Writer) {
 	g.StartCalled = true
 	g.StartCalledWith = numberOfPlayers
+	out.Write(g.BlindAlert)
 }
 
 func (g *GameSpy) Finish(winner string) {
@@ -114,7 +117,12 @@ func assertGameNotStarted(t *testing.T, game *GameSpy) {
 
 func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
 	t.Helper()
-	if game.FinishCalledWith != winner {
+
+	passed := retryUntil(500*time.Millisecond, func() bool {
+		return game.FinishCalledWith == winner
+	})
+
+	if !passed {
 		t.Errorf("expected finish called with %q but got %q", winner, game.FinishCalledWith)
 	}
 }
@@ -133,4 +141,14 @@ func assertScheduledAlert(t *testing.T, got, want poker.ScheduledAlert) {
 	if got != want {
 		t.Errorf("got %+v, want %+v", got, want)
 	}
+}
+
+func retryUntil(d time.Duration, f func() bool) bool {
+	deadline := time.Now().Add(d)
+	for time.Now().Before(deadline) {
+		if f() {
+			return true
+		}
+	}
+	return false
 }

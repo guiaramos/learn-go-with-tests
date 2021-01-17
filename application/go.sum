@@ -4,6 +4,7 @@ github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/ad
 github.com/guiaramos/learn-go-with-tests v0.0.0-20201206134639-7e11a8c955c3 h1:TrHg/axP9mOcDeEjZsI8xNhFecHMAQfzoTOr6UvlqEk=
 github.com/guiaramos/learn-go-with-tests v0.0.0-20201225041417-23f533c4784a h1:DiCKyO8C25bjsPwwxEzyULx23eUCEkilVNIn+MMQjR4=
 github.com/guiaramos/learn-go-with-tests v0.0.0-20210102125529-f5fe578f439b h1:7M/NBgWt61abQ3a0HlVAYFejYyMQczAA0G/+UuqgRFw=
+github.com/guiaramos/learn-go-with-tests v0.0.0-20210117112454-969ecf15520b h1:1f53XjRAYBrPOGiV6d+lJ0OW79/WrS6+bchez5pND6w=
 github.com/quii/learn-go-with-tests v0.0.0-20201224121442-f35fdae194d1 h1:p9bat6Ee7AJmBq7kI8Niy/aUaTK1eteEnUzbOAWdFuA=
 github.com/quii/learn-go-with-tests v0.0.0-20201224121442-f35fdae194d1/go.mod h1:9TDxXV4ImehdMhvt8oBdM9KJwCdUEJ5e0u3rBXAFVbk=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
